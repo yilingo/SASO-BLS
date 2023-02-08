@@ -51,11 +51,7 @@ classdef SASO_Class_online
             Obj.InitMed = InitMed;
             Obj.BanNodes = BanIndex;
             Obj.AddNodeStep = AddNodeStep;
-            Obj.AddDataStep = AddDataStep;
-            
-            
- 
-             
+            Obj.AddDataStep = AddDataStep;     
         end
         %% BLS train function        
         function Obj = Train(Obj, Input, Target)
