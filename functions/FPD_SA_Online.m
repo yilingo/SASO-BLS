@@ -6,7 +6,6 @@ classdef FPD_SA_Online
     %% Functions and algorithm
     methods    (Static = true)              
         function model = SA(model,SelTrainA,NumEech4SA,sigfun,mode)
-        %% 参数初始化
             NumFeaOri = model.NumPerWin * model.NumWindow;
             NumEnhOri = model.NumEnhance; 
             NumAddFea = model.NumAddFea;
@@ -35,11 +34,9 @@ classdef FPD_SA_Online
                 AddDataOriEnhPDD = model.Beta(NumFeaOri+1:NumFeaOri+NumEnhOri,:);
                 AddDataOriEnhSel = SelTrainA(:,NumFeaOri+1:NumFeaOri+NumEnhOri);
             end 
-            % 选择结构
             SelectNeruonSet = [];
             if strcmp(mode,'AN') || model.AddNodeStep == 0 
                 for z = 1:NumClass  
-                    %间接偏微分
                     if strcmp(sigfun,'logsig')
                         DiagAddEnhAll = AddEnhSel((z-1)*NumEech4SA+1:z*NumEech4SA,:) .*(1-AddEnhSel((z-1)*NumEech4SA+1:z*NumEech4SA,:));                    
                         try 
@@ -77,14 +74,10 @@ classdef FPD_SA_Online
                         end                    
                         model.AllPD{z} = [model.AllPD{z} ; AddFeaPD ; AddRelPDD ; AddEnhPDD];                        
                     end
-                    %找到判断第z个类别最重要的节点
                     [~,Max_index] = max(model.AllPD{z},[],2);
                     Max_index_{z}=find(Max_index==z); 
-                    %找到所有单元对于第z个类别的重要性，并对其进行降序排列
                     AllPD_z = model.AllPD{z}(:,z) ;   
                     [row_descend,index_temp] = sort(abs(AllPD_z),"descend");
-
-                    %找到降序排列后，过起点和终点直线与降序直线的交点位置
                     [row_descend,index_temp] = sort(AllPD_z,"descend");
                     row_descend_line = sort(linspace(min(row_descend),max(row_descend),length(model.Beta(:,1))),'descend'); 
                     [~,ban_index] = min(abs(row_descend_line(2:end-1) - row_descend(2:end-1)'));
@@ -139,14 +132,10 @@ classdef FPD_SA_Online
                             model.AllPD{z}(NumFeaOri+NumEnhOri+(NumAddFea+NumAddRel+NumAddRel)*(k-1)+1:NumFeaOri+NumEnhOri+(NumAddFea+NumAddRel+NumAddRel)*(k-1)+NumAddFea,:)...
                           = model.FeaPD{z}(NumFeaOri+NumAddFea*(k-1)+1:NumFeaOri+NumAddFea*k,:);
                    end 
-                   %找到判断第z个类别最重要的节点
                     [~,Max_index] = max(model.AllPD{z},[],2);
                     Max_index_{z}=find(Max_index==z); 
-                    %找到所有单元对于第z个类别的重要性，并对其进行降序排列
                     AllPD_z = model.AllPD{z}(:,z) ;   
-                    [row_descend,index_temp] = sort(AllPD_z,"descend");
-
-                    %找到降序排列后，过起点和终点直线与降序直线的交点位置%                     
+                    [row_descend,index_temp] = sort(AllPD_z,"descend");                
                     row_descend_line = sort(linspace(min(row_descend),max(row_descend),length(model.Beta(:,1))),'descend'); 
                     [~,ban_index] = min(abs(row_descend_line(2:end-1) - row_descend(2:end-1)'));
                     
