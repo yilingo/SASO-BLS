@@ -59,7 +59,7 @@ classdef SASO_Class_online
  
              
         end
-        %% Train        
+        %% BLS train function        
         function Obj = Train(Obj, Input, Target)
             %% feature nodes
             Input = zscore(Input')';
@@ -98,12 +98,10 @@ classdef SASO_Class_online
             Obj.Beta =       Obj.A_Inverse * Target;           
         end     
 
-        %% data incremtal process
+        %% BLS incremtal function
          function Obj = DataIncBLS(Obj,AddInput,AllTarget)
-            %新的输入矩阵
             AddInput = zscore(AddInput')';
-            AddInputMat = [AddInput .1 * ones(size(AddInput,1),1)];  %加了一列偏置后的输入 
-            %得到初始模型在添加样本后的各层表达
+            AddInputMat = [AddInput .1 * ones(size(AddInput,1),1)]; 
             AddInputOriFea_Tot = [];
             for i = 1:Obj.NumWindow+Obj.AddNodeStep
                 AddInputFea_Temp = AddInputMat * Obj.SpaInpFeaWei{i};
@@ -115,7 +113,6 @@ classdef SASO_Class_online
             if Obj.AddNodeStep == 0
                 AddFeaMat = [AddInputOriFea_Tot .1 * ones(size(AddInputOriFea_Tot,1),1)];
                 AddEnhance = AddFeaMat * Obj.FeaEnhWei;
-    %             Obj.AddDataScale(Obj.AddDataStep) = Obj.ShrScale / max(max(AddEnhance));
                 if strcmp(Obj.sigfun,'logsig')
                     AddEnhance = logsig(AddEnhance * Obj.ShrScale);
                 elseif strcmp(Obj.sigfun,'tansig')            
@@ -158,7 +155,8 @@ classdef SASO_Class_online
             Obj.Beta = Obj.A_Inverse * AllTarget;
             Obj.A_Matrix_Train = [Obj.A_Matrix_Train;A_Matrix_Add];
          end
-
+         
+         %% BLS test function 
          function output = GetOutput(Obj,Data)
             Data = zscore(Data')';
             InpMat = [Data .1 * ones(size(Data,1),1)];
@@ -218,37 +216,33 @@ classdef SASO_Class_online
             end                         
         end   
                 
-        %% Nodes incremtal process
+        %% Nodes incremental BLS
         function Obj = IncBLS(Obj,Input,Target)
             Input = zscore(Input')';
-            InputMat = [Input .1 * ones(size(Input,1),1)];  %加了一列偏置后的输入            
-            %随机添加输入到特征层的权值
+            InputMat = [Input .1 * ones(size(Input,1),1)];           
             AddInpFeaWei = MyClassTools.IntialMed(size(Input,2)+1,Obj.NumAddFea,Obj.InitMed);
 
             AddFeature = mapminmax(InputMat * AddInpFeaWei);
-            clear AddInpFeaWei Input;
+%             clear AddInpFeaWei Input;
             AddSapInpFeaWei  =  Obj.Sparse_bls(AddFeature,InputMat,1e-3,50)';
             Obj.SpaInpFeaWei{Obj.NumWindow + Obj.AddNodeStep} = AddSapInpFeaWei;
-            clear AddFeature;
-            %得到添加的特征的值
+%             clear AddFeature;
+            
             AddFeaSpa = InputMat * AddSapInpFeaWei;
-            clear InputMat
+%             clear InputMat
+            
             [AddFeaSpa,AddNormFea]  =  mapminmax(AddFeaSpa',-1,1);
             AddFeaSpa = AddFeaSpa';
-            %只在添加的特征值范围内定制了一个归一化尺度NormPerStep供测试使用
             Obj.NormFeaTot(Obj.NumWindow + Obj.AddNodeStep) = AddNormFea;
-            clear AddNormFea
-            %全体特征值
+%             clear AddNormFea
+            
             Obj.TotFeaSpa = [Obj.TotFeaSpa AddFeaSpa];
-            %加入偏置的全体特征矩阵
             FeaMat = [Obj.TotFeaSpa .1 * ones(size(Obj.TotFeaSpa,1),1)];
-            %加入偏置的增加部分的特征矩阵
             if isempty(AddFeaSpa)
                 AddFeaSpa = [];
                 AddRel = [];
             else
                 AddFeaMat = [AddFeaSpa .1 * ones(size(AddFeaSpa,1),1)];
-                %增加特征在增强层对应点的权值
                 if Obj.NumAddFea >= Obj.NumAddRel
                     Obj.AddFeaRelWei{Obj.AddNodeStep} = orth(MyClassTools.IntialMed(Obj.NumAddFea+1,Obj.NumAddRel,Obj.InitMed));
 
@@ -256,7 +250,6 @@ classdef SASO_Class_online
                     Obj.AddFeaRelWei{Obj.AddNodeStep} = orth(MyClassTools.IntialMed(Obj.NumAddFea+1,Obj.NumAddRel,Obj.InitMed)')';
 
                 end
-                %相应增加的增强层
                 AddRel = AddFeaMat * Obj.AddFeaRelWei{Obj.AddNodeStep};
                 Obj.RelScale(Obj.AddNodeStep) = Obj.ShrScale / max(max(AddRel));
                 if strcmp(Obj.sigfun,'logsig')
@@ -266,13 +259,13 @@ classdef SASO_Class_online
                 end
                 clear AddFeaMat;                
             end
-            %全体特征到新增增强层的权值
+            
             if Obj.NumWindow*Obj.NumPerWin+Obj.AddNodeStep*Obj.NumAddFea >= Obj.NumAddEnh
                 Obj.AllFeaAddEnhWei{Obj.AddNodeStep} = orth(MyClassTools.IntialMed(Obj.NumWindow*Obj.NumPerWin+Obj.AddNodeStep*Obj.NumAddFea+1,Obj.NumAddEnh,Obj.InitMed));
             else
                 Obj.AllFeaAddEnhWei{Obj.AddNodeStep} = orth(MyClassTools.IntialMed(Obj.NumWindow*Obj.NumPerWin+Obj.AddNodeStep*Obj.NumAddFea+1,Obj.NumAddEnh,Obj.InitMed)')';
             end
-            %全体新增增强层的值，定制激活函数的缩放尺度Scale
+
             AddEnh = FeaMat * Obj.AllFeaAddEnhWei{Obj.AddNodeStep};
             Obj.AddEnhScale(Obj.AddNodeStep) = Obj.ShrScale / max(max(AddEnh));
             if strcmp(Obj.sigfun,'logsig')
@@ -280,14 +273,14 @@ classdef SASO_Class_online
             else            
                 AddEnh = tansig(AddEnh * Obj.AddEnhScale(Obj.AddNodeStep));
             end
-            clear FeaMat
-            %全体A矩阵
+%             clear FeaMat
+
             A_Matrix_Add = [AddFeaSpa AddRel AddEnh];
             A_Matrix_Tot = [Obj.A_Matrix_Train A_Matrix_Add];
             clear AddFeaSpa AddRel AddEnh
             Vec_D = Obj.A_Inverse * A_Matrix_Add;
             Vec_C = A_Matrix_Add - Obj.A_Matrix_Train * Vec_D;
-            clear A_Matrix_Add
+%             clear A_Matrix_Add
             if all(Vec_C(:)==0)
                 [~,w] = size(Vec_D);
                 Vec_B = (eye(w)-Vec_D'*Vec_D)\(Vec_D'*Obj.A_Inverse);
@@ -297,15 +290,11 @@ classdef SASO_Class_online
             Obj.A_Inverse = [Obj.A_Inverse-Vec_D*Vec_B;Vec_B];
             clear Vec_B Vec_C Vec_D
             Obj.Beta = Obj.A_Inverse * Target; 
-%             Obj.SpaInpFeaWei = [Obj.SpaInpFeaWei AddSapInpFeaWei];
             Obj.A_Matrix_Train = A_Matrix_Tot;                    
         end
 
          
-        %% Test
-        
-        
-       
+        %% SASO-BLS test funciton
         function [Obj,output] = PrunOutput(Obj,Data,BanType,Target,UType)
             Data = zscore(Data')';
             InpMat = [Data .1 * ones(size(Data,1),1)];
@@ -344,17 +333,14 @@ classdef SASO_Class_online
             %% Incremental learning
             if Obj.AddNodeStep > 0
                 for i = 1:Obj.AddNodeStep
-                    %每一步增加的特征层
                     AddFea = InpMat * Obj.SpaInpFeaWei{i+Obj.NumWindow};                
-                    AddFea  =  mapminmax('apply',AddFea',Obj.NormFeaTot(i+Obj.NumWindow))'; 
-                    %每一步增加相应的增强层               
+                    AddFea  =  mapminmax('apply',AddFea',Obj.NormFeaTot(i+Obj.NumWindow))';               
                     AddFeaMat = [AddFea .1 * ones(size(AddFea,1),1)];
                     if strcmp(Obj.sigfun,'logsig')
                         AddRel = logsig(AddFeaMat * Obj.AddFeaRelWei{i} * Obj.RelScale(i));
                     else            
                         AddRel = tansig(AddFeaMat * Obj.AddFeaRelWei{i} * Obj.RelScale(i));
                     end                    
-                    %每一步增加的增强层
                     OriFea = [OriFea AddFea];
                     OriFeaMat = [OriFea .1 * ones(size(OriFea,1),1)];
                     if strcmp(Obj.sigfun,'logsig')
@@ -396,11 +382,6 @@ classdef SASO_Class_online
             clear OriAMatrix0
             if strcmp(UType,'update')
                 Obj.Beta = (AMatrix'  *  AMatrix+eye(size(AMatrix',1)) * (Obj.L2Param)) \ ( AMatrix'  *  Target);
-%                 AR_ = Obj.A_Inverse;
-%                 AR_(Obj.BanNodes,:) = [] ;
-%                 AD = Obj.A_Matrix_Train(:,Obj.BanNodes);
-%                 BT = Obj.A_Inverse(Obj.BanNodes,:);
-%                 Obj.Beta = AR_ * (eye(size(AD,1)) - AD * BT \ Target) ;
             end              
                 
             clear FeaMat;
