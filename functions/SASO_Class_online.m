@@ -1,41 +1,39 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Fast Sensitivity Analysis Based Online Self-Organizing Broad Learning System (Matlab)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Copyright (C) 2022
+
 classdef SASO_Class_online
     properties
         Name = 'Increamental Broad Learning System';
         
-
-
-        
-        
         NumPerWin            % Feature nodes  per window
         NumWindow            % Number of windows of feature nodes
         NumEnhance           % Number of enhancement nodes
-        NumAddFea         % Number of feature nodes per increment step 
-        NumAddRel      % Number of enhancement nodes related to the incremental feature nodes per increment step
-        NumAddEnh         % Number of enhancement nodes in each incremental learning
+        NumAddFea            % Number of feature nodes per increment step 
+        NumAddRel            % Number of enhancement nodes related to the incremental feature nodes per increment step
+        NumAddEnh            % Number of enhancement nodes in each incremental learning
         IncStep              % Steps of incremental learning
         ShrScale             % The shrinkage scale of the enhancement nodes
-        Scale
-        RelScale
+        RelScale             % The shrinkage scale of the related added enhancement nodes
         L2Param              % The L2 regularization parameter
         SpaInpFeaWei         % Sparce weight matrix from input to feature layer
         NormFeaTot = struct  % Normlization setting of feature layer
         FeaEnhWei            % Weight matrix from feature layer to enhance layer
         Beta                 % Weight matrix from feature layer and enhance layer to output
-        TotFeaSpa
-        A_Matrix_Train
-        AllFeaAddEnhWei
-        AddFeaRelWei
-        AddEnhScale
-        A_Inverse
-        sigfun
-        FeaPD
-        AllPD
-        InitMed
-        BanNodes
-        AddNodeStep
-        AddDataStep
-        AddDataScale
-
+        TotFeaSpa            % total feature matrix
+        A_Matrix_Train       % State matrix 
+        AllFeaAddEnhWei      % Weight from all feature nodes to added enhancement nodes
+        AddFeaRelWei         % Weight from added featrue nodes to related enhancement nodes
+        AddEnhScale          % The shrinkage scale of the added enhancement nodes
+        A_Inverse            % Inverse of state matrix
+        sigfun               % Activation funciton
+        InitMed              % Model initializaiton method              
+        BanNodes             % List of baned nodes
+        FeaPD                % Partial differential of feature nodes 
+        AllPD                % Partial differential of all nodes
+        AddNodeStep          % Nodes add step
+        AddDataStep          % Data add step        
     end
     %% Functions and algorithm
     methods    
