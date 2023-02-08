@@ -173,33 +173,19 @@ if ifplot
     BLSFSA_mean = [mean(BLSFSA_Rec);mean(BLSFSA_Pre);mean(BLSFSA_F1);mean(BLSFSA_time);mean(BLSFSA_Par)];
     BLSTSA_mean = [mean(BLSTSA_Rec);mean(BLSTSA_Pre);mean(BLSTSA_F1);mean(BLSTSA_time);mean(BLSTSA_Par)];       
 
-    BLS_std = [std(BLS_Rec);std(BLS_Pre);std(BLS_F1);std(BLS_time);std(BLS_Par)];
-    BLSFSA_std = [std(BLSFSA_Rec);std(BLSFSA_Pre);std(BLSFSA_F1);std(BLSFSA_time);std(BLSFSA_Par)];
-    BLSTSA_std = [std(BLSTSA_Rec);std(BLSTSA_Pre);std(BLSTSA_F1);std(BLSTSA_time);std(BLSTSA_Par)];    
-
-    BLS_up = BLS_mean + BLS_std;
-    BLSFSA_up = BLSFSA_mean + BLSFSA_std;
-    BLSTSA_up = BLSTSA_mean + BLSTSA_std;  
-
-    BLS_low = BLS_mean - BLS_std;
-    BLSFSA_low = BLSFSA_mean - BLSFSA_std;
-    BLSTSA_low = BLSTSA_mean - BLSTSA_std;   
     for i =1:5
         subplot(5,1,i);
         % BLS        
         plot(BLS_mean(i,:),'b')
         hold on;
-%         fill([nodes_line,fliplr(nodes_line)],[BLS_up(i,:),fliplr(BLS_low(i,:))],'b', 'linestyle', 'none', 'FaceAlpha',0.2)
     
         % BLS + FPD_SA 
         plot(BLSFSA_mean(i,:),'r')
-        hold on;
-%         fill([nodes_line,fliplr(nodes_line)],[BLSFSA_up(i,:),fliplr(BLSFSA_low(i,:))],'r', 'linestyle', 'none', 'FaceAlpha',0.2)
+
         
         % BLS + traditional SA
         plot(BLSTSA_mean(i,:),'g')
-        hold on;
-%         fill([nodes_line,fliplr(nodes_line)],[BLSTSA_up(i,:),fliplr(BLSTSA_low(i,:))],'g', 'linestyle', 'none', 'FaceAlpha',0.2)
+
     end
 
 end
