@@ -6,7 +6,7 @@ This repository contains an implementation Matlab code. At present, we implement
 
 ## Dataset
 
-Tennessee Eastman process (TEP). One can find the dataset [here](https://github.com/YKatser/CPDE/tree/master/TEP_data) or use the processed dataset in `.\DataSet` file floder. Since the start time and end time  for each fault are the 161th and 960th samples, there are 480  training samples and 800 test samples for each fault, plus the  normal 520 training samples and 800 testing samples, making  a total of 4820 training samples and 8000 testing samples.
+Tennessee Eastman process (TEP). One can find the dataset [here](https://github.com/YKatser/CPDE/tree/master/TEP_data) or use the processed dataset in `.\DataSet` floder. Since the start time and end time  for each fault are the 161th and 960th samples, there are 480  training samples and 800 test samples for each fault, plus the  normal 520 training samples and 800 testing samples, making  a total of 4820 training samples and 8000 testing samples.
 
 ## Demo
 
