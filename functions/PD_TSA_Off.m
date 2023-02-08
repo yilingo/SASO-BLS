@@ -6,7 +6,6 @@ classdef PD_TSA_Off
     %% Functions and algorithm
     methods    (Static = true)              
         function model = TSA(model,SelTrainA,sigfun)
-        %% 参数初始化
             NumFeaOri = model.NumPerWin * model.NumWindow;
             NumEnhOri = model.NumEnhance; 
             EnhMatSelOri = SelTrainA(:,NumFeaOri + 1:NumFeaOri+NumEnhOri);
@@ -85,28 +84,23 @@ classdef PD_TSA_Off
                 end                    
                 model.AllPD = [model.AllPD ; AddFeaPD ; AddRelPDD ; AddEnhPDD];
             end   
-            %选择重要性
             FyFeature = max(model.AllPD,[],2);
-            %按行排序
             [FyFeature_sort, Sort_index] = sort(FyFeature,'descend');
-            %计算 delta S
             DeltaFeatureFy = zeros(length(FyFeature_sort)-1,1);
             for i = 1:(length(FyFeature_sort)-1)                
                 DeltaFeatureFy(i) = FyFeature_sort(i)-FyFeature_sort(i+1);
             end
-            %计算 delta S 的均值
             MeanFeatureFy = mean(DeltaFeatureFy);
-            % 计算 delta S / Vec S
+            
             Condition1 = DeltaFeatureFy./FyFeature_sort(1:end-1);
-            %第一个条件
             Condition1_judge = (Condition1>0.001);
             SelectIndex1 = find(Condition1_judge==1);
             SelectNeuron1 = Sort_index(SelectIndex1);
-            %第二个条件
+
             Condition2_judge = (FyFeature_sort>1*MeanFeatureFy) ;
             SelectIndex2 = find(Condition2_judge==1);
             SelectNeuron2 = Sort_index(SelectIndex2);
-            % 求并集
+
             SelectNeruonSet = intersect(SelectNeuron1,SelectNeuron2);          
             model.BanNodes = setdiff(Sort_index,SelectNeruonSet);                      
         end
