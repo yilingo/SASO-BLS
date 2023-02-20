@@ -1,6 +1,6 @@
 # SASO-BLS
 
-Fast sensitivity analysis based online self-organizing broad learning system (SASO-BLS) is an efficient online self-organizing framework that can automatically adjust BLS's structure during incremental learning. It has beem introduced in this research [paper](https://www.baidu.com/).
+Fast sensitivity analysis based online self-organizing broad learning system (SASO-BLS) is an efficient online self-organizing framework that can automatically adjust BLS's structure during incremental learning.
 
 This repository contains an implementation Matlab code. At present, we implements a novel fast partial differential-based sensitivity analysis (FPD-SA) approach to make the model more precise and concise. FPD-SA is a general method that can compress any differentiable model. By introducing FPD-SA into BLS, we provide the offline SASO-BLS algorithm for discrete data and extend it to online mode for streaming data.
 
@@ -10,4 +10,4 @@ Tennessee Eastman process (TEP). One can find the dataset [here](https://github.
 
 ## Demo
 
-The script `SASO_BLS_offline.m` is in charged of testing SASO-BLS on discrete data. Samely, `SASO_BLS_online.m` is implemented to test SASO-BLS on streaming data. Furthermore, `BLS_FSA_TSA.m` is implemented to compare the performance of <kbd>BLS</kbd>, <kbd>BLS</kbd> + <kbd>traditional SA</kbd> and <kbd>BLS</kbd>+<kbd>FPD-SA</kbd>.
+The script `SASO_BLS_offline.m` is in charged of testing SASO-BLS on discrete data. Samely, `SASO_BLS_online.m` is implemented to test SASO-BLS on streaming data. Furthermore, `SA_Comparison.m` is implemented to compare the performance of <kbd>BLS</kbd>, <kbd>BLS</kbd> + <kbd>EET_SA</kbd>, <kbd>BLS</kbd> + <kbd>GV_SA</kbd>, <kbd>BLS</kbd> + <kbd>SV_SA</kbd>, <kbd>BLS</kbd> + <kbd>PD_SA</kbd> and <kbd>BLS</kbd> + <kbd>FPD_SA</kbd>.
