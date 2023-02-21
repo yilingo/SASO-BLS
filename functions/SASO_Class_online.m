@@ -1,8 +1,3 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Fast Sensitivity Analysis Based Online Self-Organizing Broad Learning System (Matlab)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Copyright (C) 2022
-
 classdef SASO_Class_online
     properties
         Name = 'Increamental Broad Learning System';
@@ -33,7 +28,8 @@ classdef SASO_Class_online
         FeaPD                % Partial differential of feature nodes 
         AllPD                % Partial differential of all nodes
         AddNodeStep          % Nodes add step
-        AddDataStep          % Data add step        
+        AddDataStep          % Data add step
+
     end
     %% Functions and algorithm
     methods    
@@ -51,9 +47,13 @@ classdef SASO_Class_online
             Obj.InitMed = InitMed;
             Obj.BanNodes = BanIndex;
             Obj.AddNodeStep = AddNodeStep;
-            Obj.AddDataStep = AddDataStep;     
+            Obj.AddDataStep = AddDataStep;
+            
+            
+ 
+             
         end
-        %% BLS train function        
+        %% Train        
         function Obj = Train(Obj, Input, Target)
             %% feature nodes
             Input = zscore(Input')';
@@ -72,7 +72,7 @@ classdef SASO_Class_online
 %             clear FeaPerWin InputMat input Fea_Temp;            
             %% enhancement nodes
             FeaMat = [Obj.TotFeaSpa .1 * ones(size(Obj.TotFeaSpa,1),1)];
-            if Obj.NumPerWin * Obj.NumWindow >= Obj.NumEnhance   %正交化
+            if Obj.NumPerWin * Obj.NumWindow >= Obj.NumEnhance   
                 Obj.FeaEnhWei = orth(MyClassTools.IntialMed(Obj.NumWindow * Obj.NumPerWin + 1,Obj.NumEnhance,Obj.InitMed));
             else
                 Obj.FeaEnhWei = orth(MyClassTools.IntialMed(Obj.NumWindow * Obj.NumPerWin + 1,Obj.NumEnhance,Obj.InitMed)')';
@@ -92,10 +92,10 @@ classdef SASO_Class_online
             Obj.Beta =       Obj.A_Inverse * Target;           
         end     
 
-        %% BLS incremtal function
+        %% data incremtal process
          function Obj = DataIncBLS(Obj,AddInput,AllTarget)
             AddInput = zscore(AddInput')';
-            AddInputMat = [AddInput .1 * ones(size(AddInput,1),1)]; 
+            AddInputMat = [AddInput .1 * ones(size(AddInput,1),1)];  
             AddInputOriFea_Tot = [];
             for i = 1:Obj.NumWindow+Obj.AddNodeStep
                 AddInputFea_Temp = AddInputMat * Obj.SpaInpFeaWei{i};
@@ -107,6 +107,7 @@ classdef SASO_Class_online
             if Obj.AddNodeStep == 0
                 AddFeaMat = [AddInputOriFea_Tot .1 * ones(size(AddInputOriFea_Tot,1),1)];
                 AddEnhance = AddFeaMat * Obj.FeaEnhWei;
+    %             Obj.AddDataScale(Obj.AddDataStep) = Obj.ShrScale / max(max(AddEnhance));
                 if strcmp(Obj.sigfun,'logsig')
                     AddEnhance = logsig(AddEnhance * Obj.ShrScale);
                 elseif strcmp(Obj.sigfun,'tansig')            
@@ -149,8 +150,7 @@ classdef SASO_Class_online
             Obj.Beta = Obj.A_Inverse * AllTarget;
             Obj.A_Matrix_Train = [Obj.A_Matrix_Train;A_Matrix_Add];
          end
-         
-         %% BLS test function 
+
          function output = GetOutput(Obj,Data)
             Data = zscore(Data')';
             InpMat = [Data .1 * ones(size(Data,1),1)];
@@ -210,26 +210,25 @@ classdef SASO_Class_online
             end                         
         end   
                 
-        %% Nodes incremental BLS
+        %% Nodes incremtal process
         function Obj = IncBLS(Obj,Input,Target)
             Input = zscore(Input')';
-            InputMat = [Input .1 * ones(size(Input,1),1)];           
+            InputMat = [Input .1 * ones(size(Input,1),1)];    
             AddInpFeaWei = MyClassTools.IntialMed(size(Input,2)+1,Obj.NumAddFea,Obj.InitMed);
 
             AddFeature = mapminmax(InputMat * AddInpFeaWei);
-%             clear AddInpFeaWei Input;
+            clear AddInpFeaWei Input;
             AddSapInpFeaWei  =  Obj.Sparse_bls(AddFeature,InputMat,1e-3,50)';
             Obj.SpaInpFeaWei{Obj.NumWindow + Obj.AddNodeStep} = AddSapInpFeaWei;
-%             clear AddFeature;
-            
+            clear AddFeature;
             AddFeaSpa = InputMat * AddSapInpFeaWei;
-%             clear InputMat
-            
+            clear InputMat
+
             [AddFeaSpa,AddNormFea]  =  mapminmax(AddFeaSpa',-1,1);
             AddFeaSpa = AddFeaSpa';
             Obj.NormFeaTot(Obj.NumWindow + Obj.AddNodeStep) = AddNormFea;
-%             clear AddNormFea
-            
+            clear AddNormFea
+
             Obj.TotFeaSpa = [Obj.TotFeaSpa AddFeaSpa];
             FeaMat = [Obj.TotFeaSpa .1 * ones(size(Obj.TotFeaSpa,1),1)];
             if isempty(AddFeaSpa)
@@ -253,13 +252,11 @@ classdef SASO_Class_online
                 end
                 clear AddFeaMat;                
             end
-            
             if Obj.NumWindow*Obj.NumPerWin+Obj.AddNodeStep*Obj.NumAddFea >= Obj.NumAddEnh
                 Obj.AllFeaAddEnhWei{Obj.AddNodeStep} = orth(MyClassTools.IntialMed(Obj.NumWindow*Obj.NumPerWin+Obj.AddNodeStep*Obj.NumAddFea+1,Obj.NumAddEnh,Obj.InitMed));
             else
                 Obj.AllFeaAddEnhWei{Obj.AddNodeStep} = orth(MyClassTools.IntialMed(Obj.NumWindow*Obj.NumPerWin+Obj.AddNodeStep*Obj.NumAddFea+1,Obj.NumAddEnh,Obj.InitMed)')';
             end
-
             AddEnh = FeaMat * Obj.AllFeaAddEnhWei{Obj.AddNodeStep};
             Obj.AddEnhScale(Obj.AddNodeStep) = Obj.ShrScale / max(max(AddEnh));
             if strcmp(Obj.sigfun,'logsig')
@@ -267,14 +264,13 @@ classdef SASO_Class_online
             else            
                 AddEnh = tansig(AddEnh * Obj.AddEnhScale(Obj.AddNodeStep));
             end
-%             clear FeaMat
-
+            clear FeaMat
             A_Matrix_Add = [AddFeaSpa AddRel AddEnh];
             A_Matrix_Tot = [Obj.A_Matrix_Train A_Matrix_Add];
             clear AddFeaSpa AddRel AddEnh
             Vec_D = Obj.A_Inverse * A_Matrix_Add;
             Vec_C = A_Matrix_Add - Obj.A_Matrix_Train * Vec_D;
-%             clear A_Matrix_Add
+            clear A_Matrix_Add
             if all(Vec_C(:)==0)
                 [~,w] = size(Vec_D);
                 Vec_B = (eye(w)-Vec_D'*Vec_D)\(Vec_D'*Obj.A_Inverse);
@@ -288,7 +284,10 @@ classdef SASO_Class_online
         end
 
          
-        %% SASO-BLS test funciton
+        %% Test
+        
+        
+       
         function [Obj,output] = PrunOutput(Obj,Data,BanType,Target,UType)
             Data = zscore(Data')';
             InpMat = [Data .1 * ones(size(Data,1),1)];
@@ -328,7 +327,7 @@ classdef SASO_Class_online
             if Obj.AddNodeStep > 0
                 for i = 1:Obj.AddNodeStep
                     AddFea = InpMat * Obj.SpaInpFeaWei{i+Obj.NumWindow};                
-                    AddFea  =  mapminmax('apply',AddFea',Obj.NormFeaTot(i+Obj.NumWindow))';               
+                    AddFea  =  mapminmax('apply',AddFea',Obj.NormFeaTot(i+Obj.NumWindow))';           
                     AddFeaMat = [AddFea .1 * ones(size(AddFea,1),1)];
                     if strcmp(Obj.sigfun,'logsig')
                         AddRel = logsig(AddFeaMat * Obj.AddFeaRelWei{i} * Obj.RelScale(i));

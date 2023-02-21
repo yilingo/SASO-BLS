@@ -30,7 +30,6 @@ classdef SASO_Class
         InitMed              % Model initializaiton method              
         BanNodes             % List of baned nodes
         Step                 % Incremental step
-        NormMethod           % Normlization method
         FeaPD                % Partial differential of feature nodes 
         AllPD                % Partial differential of all nodes
     end
@@ -38,7 +37,7 @@ classdef SASO_Class
     %% Functions and algorithm
     methods    
         %% Functions and algorithm
-        function Obj = SASO_Class(NumPerWin,NumWindow,NumEnhance,NumAddFea,NumAddRel,NumAddEnh,ShrScale,L2Param,BanIndex,Step,sigfun,InitMed,NormMethod)
+        function Obj = SASO_Class(NumPerWin,NumWindow,NumEnhance,NumAddFea,NumAddRel,NumAddEnh,ShrScale,L2Param,BanIndex,Step,sigfun,InitMed)
             Obj.NumPerWin = NumPerWin;
             Obj.NumWindow = NumWindow;
             Obj.NumEnhance = NumEnhance;          
@@ -50,8 +49,7 @@ classdef SASO_Class
             Obj.sigfun = sigfun;
             Obj.InitMed = InitMed;
             Obj.BanNodes = BanIndex;
-            Obj.Step = Step;
-            Obj.NormMethod = NormMethod;             
+            Obj.Step = Step;       
         end
 
         %% Train function        

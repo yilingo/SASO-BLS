@@ -1,11 +1,11 @@
 classdef FPD_SA_Online
     properties
-        Name = 'Off-line Broad Learning System';
+        Name = 'On-line SASO-BLS';
 
     end
     %% Functions and algorithm
     methods    (Static = true)              
-        function model = SA(model,SelTrainA,NumEech4SA,sigfun,mode)
+        function model = SA(model,SelTrainA,NumEech4SA,sigfun,mode,SASO_version)
             NumFeaOri = model.NumPerWin * model.NumWindow;
             NumEnhOri = model.NumEnhance; 
             NumAddFea = model.NumAddFea;
@@ -77,15 +77,19 @@ classdef FPD_SA_Online
                     [~,Max_index] = max(model.AllPD{z},[],2);
                     Max_index_{z}=find(Max_index==z); 
                     AllPD_z = model.AllPD{z}(:,z) ;   
-                    [row_descend,index_temp] = sort(abs(AllPD_z),"descend");
-                    [row_descend,index_temp] = sort(AllPD_z,"descend");
-                    row_descend_line = sort(linspace(min(row_descend),max(row_descend),length(model.Beta(:,1))),'descend'); 
-                    [~,ban_index] = min(abs(row_descend_line(2:end-1) - row_descend(2:end-1)'));
-                    
+                    [row_descend,index_temp] = sort(abs(AllPD_z),'descend');
 
-                %% method of tangent line                    
-%                     abs_index = 1:length(row_descend);
-%                     [~,ban_index] = min(sqrt(row_descend'.^2+abs_index.^2));
+
+                    if strcmp(SASO_version,'P')  
+                    % method of performance    
+                        [row_descend,index_temp] = sort(AllPD_z,'descend');
+                        row_descend_line = sort(linspace(min(row_descend),max(row_descend),length(model.Beta(:,1))),'descend'); 
+                        [~,ban_index] = min(abs(row_descend_line(2:end-1) - row_descend(2:end-1)'));
+                    elseif strcmp(SASO_version,'M')
+                    % method of miniature                   
+                        abs_index = 1:length(row_descend);
+                        [~,ban_index] = min(sqrt(row_descend'.^2+abs_index.^2));
+                    end
 
 
                     if row_descend(ban_index)>0
@@ -132,17 +136,22 @@ classdef FPD_SA_Online
                             model.AllPD{z}(NumFeaOri+NumEnhOri+(NumAddFea+NumAddRel+NumAddRel)*(k-1)+1:NumFeaOri+NumEnhOri+(NumAddFea+NumAddRel+NumAddRel)*(k-1)+NumAddFea,:)...
                           = model.FeaPD{z}(NumFeaOri+NumAddFea*(k-1)+1:NumFeaOri+NumAddFea*k,:);
                    end 
+
                     [~,Max_index] = max(model.AllPD{z},[],2);
                     Max_index_{z}=find(Max_index==z); 
+
                     AllPD_z = model.AllPD{z}(:,z) ;   
-                    [row_descend,index_temp] = sort(AllPD_z,"descend");                
+                    [row_descend,index_temp] = sort(AllPD_z,'descend');
+
+                    if strcmp(SASO_version,'P') 
+                   
                     row_descend_line = sort(linspace(min(row_descend),max(row_descend),length(model.Beta(:,1))),'descend'); 
                     [~,ban_index] = min(abs(row_descend_line(2:end-1) - row_descend(2:end-1)'));
-                    
-
-                %% method of tangent line
-%                     abs_index = 1:length(row_descend);
-%                     [~,ban_index] = min(sqrt(row_descend'.^2+abs_index.^2));
+                    elseif strcmp(SASO_version,'M')
+                % method of tangent line
+                    abs_index = 1:length(row_descend);
+                    [~,ban_index] = min(sqrt(row_descend'.^2+abs_index.^2));
+                    end
 
 
 

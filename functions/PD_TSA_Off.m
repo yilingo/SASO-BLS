@@ -1,6 +1,6 @@
 classdef PD_TSA_Off
     properties
-        Name = 'Off-line Broad Learning System';
+        Name = 'Traditional SA method';
 
     end
     %% Functions and algorithm
@@ -91,7 +91,6 @@ classdef PD_TSA_Off
                 DeltaFeatureFy(i) = FyFeature_sort(i)-FyFeature_sort(i+1);
             end
             MeanFeatureFy = mean(DeltaFeatureFy);
-            
             Condition1 = DeltaFeatureFy./FyFeature_sort(1:end-1);
             Condition1_judge = (Condition1>0.001);
             SelectIndex1 = find(Condition1_judge==1);
