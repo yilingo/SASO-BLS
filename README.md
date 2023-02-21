@@ -11,3 +11,7 @@ Tennessee Eastman process (TEP). One can find the dataset [here](https://github.
 ## Demo
 
 The script `SASO_BLS_offline.m` is in charged of testing SASO-BLS on discrete data. Samely, `SASO_BLS_online.m` is implemented to test SASO-BLS on streaming data. Furthermore, `SA_Comparison.m` is implemented to compare the performance of <kbd>BLS</kbd>, <kbd>BLS</kbd> + <kbd>EET_SA</kbd>, <kbd>BLS</kbd> + <kbd>GV_SA</kbd>, <kbd>BLS</kbd> + <kbd>SV_SA</kbd>, <kbd>BLS</kbd> + <kbd>PD_SA</kbd> and <kbd>BLS</kbd> + <kbd>FPD_SA</kbd>.
+
+## Results
+
+# SA comparison
