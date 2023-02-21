@@ -34,26 +34,18 @@ NumEnhPerInc = 10;
 
 % other parameters
 sigfun = 'tansig';
-ThetaSel = 0.1;
+ThetaSel = 0.07;
 L2Param = 2^-30; %L2 parameter
 ShrScale = .8;   %the l2 regularization parameter and the shrinkage scale of the enhancement nodes   
 BanType = 'All'; %FeatureNodes %All %EnhanNodes
 StartStep = -1;
-Step = 30;
+Step = 50;
 BanIndex = [];
 InitMed = 'GuassX'; %MeanX , GuassX, MeanHe,GuassHe
 ifplot = false;
 
 %% Model Initialization
-Model = SASO_Class(NumPerWin,NumWindow,NumEnhance,NumFeaPerInc,NumEnhRelPerInc,NumEnhPerInc,ShrScale,L2Param,BanIndex,StartStep,sigfun,InitMed,NormMethod);
-% Result sequence initalization
-
-idicators = {'BLS_Pre',   'BLS_Rec',   'BLS_F1',   'BLS_Par',   'BLS_time',...
-             'BLSTSA_Pre','BLSTSA_Rec','BLSFSA_F1','BLSTSA_Par','BLSTSA_time',...
-             'BLSFSA_Pre','BLSFSA_Rec','BLSTSA_F1','BLSFSA_Par','BLSFSA_time'};
-for i = 1:length(idicators)
-    eval([idicators{i} '=zeros(1,Step+1);']);
-end
+Model = SASO_Class(NumPerWin,NumWindow,NumEnhance,NumFeaPerInc,NumEnhRelPerInc,NumEnhPerInc,ShrScale,L2Param,BanIndex,StartStep,sigfun,InitMed);
 
 while Model.Step <= Step
     Model.Step = Model.Step +1;    
@@ -75,70 +67,77 @@ while Model.Step <= Step
     ValLabelDis = MyClassTools.ClassResult(ForTest_y);
     ValIndex = Evaluation_idx(ValResultDis,ValLabelDis);
     [~,~,~,~,~,~,WMacro_P,WMacro_R,WMacro_F1] = ValIndex.Macro();
-    BLSpara = MyClassTools.bls_parameters(Model,'bls','offline');
+    SASOBLS_para = MyClassTools.bls_parameters(Model,'bls','offline');
 
     BLS_Pre(1,Model.Step+1) = WMacro_P;
     BLS_Rec(1,Model.Step+1) = WMacro_R;
     BLS_F1(1,Model.Step+1) = WMacro_F1;
-    BLS_Par(1,Model.Step+1) = BLSpara;
+    BLS_Par(1,Model.Step+1) = SASOBLS_para;
     disp(['The Precision of BLS is ' ,num2str(WMacro_P)]);
     fprintf(2,['The Recall of BLS is ' ,num2str(WMacro_R),'\n']);
     fprintf(2,['The macro-F1 of BLS is ' ,num2str(WMacro_F1),'\n']);
-    disp(['The parameter of BLS is ' ,num2str(BLSpara),'K']);
+    disp(['The parameter of BLS is ' ,num2str(SASOBLS_para),'K']);
 
     NumEachLabel = tabulate(MyClassTools.ClassResult(ForTrain_y));
     NumEech4SA = min(NumEachLabel(:,2));
     SelTrainA = Model.A_Matrix_Train;
 
-    % FPD-SA
+    % SASO-BLS
     tic;
     Model = FPD_SA_Off.SA(Model,SelTrainA,NumEech4SA,sigfun,ThetaSel); 
-    BLSFSA_time(1,Model.Step+1) = toc;
+    SASOBLS_time(1,Model.Step+1) = toc;
 
 
-    [ModelFSA,~] = Model.PrunOutput(ForTrain_x,BanType,ForTrain_y,'update');
-    [~,FSAValResult] = ModelFSA.PrunOutput(ForTest_x,BanType,ForTest_y,'test');
-    FSAValResultDis = MyClassTools.ClassResult(FSAValResult);
+    [Model_SASOBLS,~] = Model.PrunOutput(ForTrain_x,BanType,ForTrain_y,'update');
+    [~,SASOBLS_ValResult] = Model_SASOBLS.PrunOutput(ForTest_x,BanType,ForTest_y,'test');
+    FSAValResultDis = MyClassTools.ClassResult(SASOBLS_ValResult);
     FSAValIndex = Evaluation_idx(FSAValResultDis,ValLabelDis);
     [~,~,~,~,~,~,WMacro_P,WMacro_R,WMacro_F1]  = FSAValIndex.Macro();
-    FSABLSpara = MyClassTools.bls_parameters(Model,'saso-bls','offline');
+    SASOBLS_para = MyClassTools.bls_parameters(Model,'saso-bls','offline');
 
     % FPD-SA output and save
-    BLSFSA_Pre(1,Model.Step+1) = WMacro_P;
-    BLSFSA_Rec(1,Model.Step+1) = WMacro_R;
-    BLSFSA_F1(1,Model.Step+1) = WMacro_F1;
-    BLSFSA_Par(1,Model.Step+1) = FSABLSpara;
-    disp(['The Precision of FSA is -------' ,num2str(WMacro_P)]);
-    fprintf(2,['The Recall of FSA is -------' ,num2str(WMacro_R),'\n']);
-    fprintf(2,['The macro-F1 of FSA is ' ,num2str(WMacro_F1),'\n']);
-    disp(['The parameter of FSA is -------' ,num2str(FSABLSpara),'K']);
+    SASOBLS_Pre(1,Model.Step+1) = WMacro_P;
+    SASOBLS_Rec(1,Model.Step+1) = WMacro_R;
+    SASOBLS_F1(1,Model.Step+1) = WMacro_F1;
+    SASOBLS_Par(1,Model.Step+1) = SASOBLS_para;
+    disp(['The Precision of SASO-BLS is -------' ,num2str(WMacro_P)]);
+    fprintf(2,['The Recall of SASO-BLS is -------' ,num2str(WMacro_R),'\n']);
+    fprintf(2,['The macro-F1 of SASO-BLS is ' ,num2str(WMacro_F1),'\n']);
+    disp(['The parameter of SASO-BLS is -------' ,num2str(SASOBLS_para),'K']);
 
-
+    if Model.Step<Step && WMacro_R > 0.75
+        Model_SASOBLS.A_Matrix_Train = [];
+        Model_SASOBLS.A_Inverse = [];
+        Model_SASOBLS.TotFeaSpa = [];
+        Model_SASOBLS.FeaPD = [];
+        Model_SASOBLS.AllPD = [];
+        save save_model\SASOBLS_offline Model_SASOBLS
+        break;
+    elseif Model.Step == Step
+        Model = SASO_Class(NumPerWin,NumWindow,NumEnhance,NumFeaPerInc,NumEnhRelPerInc,NumEnhPerInc,ShrScale,L2Param,BanIndex,StartStep,sigfun,InitMed);
+    end
 end
 
 %% plot result
 if ifplot
-    BLS_ = [BLS_Rec;BLS_Pre;BLS_F1;BLS_time;BLS_Par];
-    BLSFSA_ = [BLSFSA_Rec;BLSFSA_Pre;BLSFSA_F1;BLSFSA_time;BLSFSA_Par];
+    BLS_results = [BLS_Rec;BLS_Pre;BLS_F1;BLS_time;BLS_Par];
+    SASOBLS_results = [SASOBLS_Rec;SASOBLS_Pre;SASOBLS_F1;SASOBLS_time;SASOBLS_Par];
     for i =1:5
         subplot(5,1,i);
         % BLS        
-        plot(BLS_(i,:),'b')
+        plot(BLS_results(i,:),'b')
         hold on;
 
         % SASO-BLS 
-        plot(BLSFSA_(i,:),'r')
+        plot(SASOBLS_results(i,:),'r')
     end
 
 end
 
 % plot confusion matrix of saso-bls
-C=repmat(max(FSAValResult')',1,length(FSAValResult(1,:)));
-FSAValResult(FSAValResult<C)=0;
-FSAValResult(FSAValResult~=0)=1;
-plotconfusion(ForTest_y',FSAValResult');
+% C=repmat(max(SASOBLS_ValResult')',1,length(SASOBLS_ValResult(1,:)));
+% SASOBLS_ValResult(SASOBLS_ValResult<C)=0;
+% SASOBLS_ValResult(SASOBLS_ValResult~=0)=1;
+% plotconfusion(ForTest_y',SASOBLS_ValResult');
    
 disp('Finish the Demo!')
-
-
-

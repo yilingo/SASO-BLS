@@ -20,7 +20,7 @@ DataSet = 'TE';
 %% data process
 IFOnline = true;
 IFshuffle = false; 
-ifplot = true;
+ifplot = false;
 NormMethod = 4;
 OnlineIntrate = 1/8;
 OnlineStep = 1/OnlineIntrate-1;
@@ -58,7 +58,7 @@ AddDataStep = -1;
 AllStep = 0;
 BanIndex = [];
 InitMed = 'GuassX'; %MeanX , GuassX, MeanHe,GuassHe
-
+SASO_version = 'P'; % P
 
 
 %% Model Initialization
@@ -115,21 +115,21 @@ while Model.AddDataStep <= OnlineStep-1
     % FPD-SA for compression
     mode = 'AD';
     tic;
-    Model = FPD_SA_Online.SA(Model,SelTrainA,NumEech4SA,sigfun,mode); 
+    Model = FPD_SA_Online.SA(Model,SelTrainA,NumEech4SA,sigfun,mode,SASO_version); 
     SASOBLS_time(1,AllStep) = toc + BLS_time(1,AllStep);
 
 
     [ModelFSA,FSATrainResult] = Model.PrunOutput(IniForTrain_x,BanType,IniForTrain_y,'update');
     FSATrainResultDis = MyClassTools.ClassResult(FSATrainResult);
     FSATrainIndex = Evaluation_idx(FSATrainResultDis,TrainLabelDis);
-    FSATrainACC = FSATrainIndex.Micro(); 
+    [~,~,~,~,~,~,~,~,FSATrainACC] = FSATrainIndex.Macro(); 
     SASOBLS_train_acc(1,AllStep) = FSATrainACC*length(TrainLabelDis)/length(ForTrain_x);
 
     [~,FSAValResult] = ModelFSA.PrunOutput(ForTest_x,BanType,ForTest_y,'test');
     FSAValResultDis = MyClassTools.ClassResult(FSAValResult);
     FSAValIndex = Evaluation_idx(FSAValResultDis,ValLabelDis);
     [~,~,~,~,~,~,WMacro_P,WMacro_R,WMacro_F1]  = FSAValIndex.Macro();
-    FSABLSpara = MyClassTools.bls_parameters(Model,'saso-bls','online');
+    FSABLSpara = MyClassTools.bls_parameters(ModelFSA,'saso-bls','online');
 
     % FPD-SA output and save
     BLSFSA_Pre(1,AllStep) = WMacro_P;
@@ -149,7 +149,7 @@ while Model.AddDataStep <= OnlineStep-1
     % Nodes incremental process
     AddNodeStepThis = 0;
     while Model.AddDataStep <= OnlineStep
-        ModelBefore = ModelFSA;
+        ModelBefore = Model;
         Model.AddNodeStep = Model.AddNodeStep +1;  
         AddNodeStepThis = AddNodeStepThis + 1;
         AllStep = AllStep + 1;
@@ -181,21 +181,24 @@ while Model.AddDataStep <= OnlineStep-1
         mode = 'AN';
         SelTrainA = Model.A_Matrix_Train;
         tic;
-        Model = FPD_SA_Online.SA(Model,SelTrainA,NumEech4SA,sigfun,mode); 
+        Model = FPD_SA_Online.SA(Model,SelTrainA,NumEech4SA,sigfun,mode,SASO_version); 
         SASOBLS_time(1,AllStep) = toc+BLS_time(1,AllStep);
 
 
         [ModelFSA,FSATrainResult] = Model.PrunOutput(IniForTrain_x,BanType,IniForTrain_y,'update');
         FSATrainResultDis = MyClassTools.ClassResult(FSATrainResult);
         FSATrainIndex = Evaluation_idx(FSATrainResultDis,TrainLabelDis);
-        FSATrainACC = FSATrainIndex.Micro(); 
+%         FSATrainACC = FSATrainIndex.Micro(); 
+        [~,~,~,~,~,~,~,~,FSATrainACC] = FSATrainIndex.Macro(); 
         SASOBLS_train_acc(1,AllStep) = FSATrainACC*length(TrainLabelDis)/length(ForTrain_x);
 
         [~,FSAValResult] = ModelFSA.PrunOutput(ForTest_x,BanType,ForTest_y,'test');
         FSAValResultDis = MyClassTools.ClassResult(FSAValResult);
         FSAValIndex = Evaluation_idx(FSAValResultDis,ValLabelDis);
         [~,~,~,~,~,~,WMacro_P,WMacro_R,WMacro_F1]  = FSAValIndex.Macro();
-        FSABLSpara = MyClassTools.bls_parameters(Model,'saso-bls','online');
+        FSABLSpara = MyClassTools.bls_parameters(ModelFSA,'saso-bls','online');
+
+
 
         % FPD-SA output and save
         BLSFSA_Pre(1,AllStep) = WMacro_P;
@@ -208,16 +211,15 @@ while Model.AddDataStep <= OnlineStep-1
         fprintf(2,['The macro-F1 of SASO-BLS is ' ,num2str(WMacro_F1),'\n']);
         disp(['The parameter of FSA SASO-BLS -------' ,num2str(FSABLSpara),'K']);
 
-
         one_order = diff(SASOBLS_train_acc);
         if BLSFSA_Rec(end) == max(BLSFSA_Rec)
             ModelBest = ModelFSA;
         end
-        if AllStep > 2 && (one_order(end) < 0.005 )
+        if AllStep > 2 && (abs(one_order(end)) <= 0.001 )
             if Model.AddDataStep == OnlineStep && AddNodeStepThis < 2
                 continue
-            elseif AddNodeStepThis == 2
-                break
+%             elseif AddNodeStepThis == 5
+%                 break
             else
                 Model = ModelBefore;
                 break
@@ -251,6 +253,5 @@ if ifplot
 
 end
 disp('Finish the Demo!')
-
 
 
