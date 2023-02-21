@@ -15,4 +15,4 @@ The script `SASO_BLS_offline.m` is in charged of testing SASO-BLS on discrete da
 ## Results
 
 ### SA comparison
-![Alt text](https://https://github.com/yilingo/SASO-BLS/results_img/SA_comparison.png)
+![Alt text](https://github.com/yilingo/SASO-BLS/blob/main/results_img/SA_comparison.png)
